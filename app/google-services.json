@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "924622369390",
+    "project_id": "prisma-32e2b",
+    "storage_bucket": "prisma-32e2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:924622369390:android:06a9bd59cf09b03c56ec7f",
+        "android_client_info": {
+          "package_name": "com.theylor.prisma"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhphda3g20bDF0NlqnLPrN01w5KuzqNOI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
