@@ -51,6 +51,7 @@ import com.theylor.prisma.ui.theme.PrismaRed
 fun Login(onLoginSuccess: () -> Unit = {}, onCreateAccountClick: () -> Unit = {}) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    //var confirmPassword by remember { mutableStateOf("") }    //
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val auth = remember { FirebaseAuth.getInstance() }
 
@@ -131,7 +132,7 @@ fun Login(onLoginSuccess: () -> Unit = {}, onCreateAccountClick: () -> Unit = {}
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-
+//
                     Text(
                         text = "Contraseña",
                         color = Color.White,
@@ -161,7 +162,38 @@ fun Login(onLoginSuccess: () -> Unit = {}, onCreateAccountClick: () -> Unit = {}
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
-
+//
+                    //                    Spacer(modifier = Modifier.height(16.dp))
+                    //
+                    //                    Text(
+                    //                        text = "Confirmar Contraseña",
+                    //                        color = Color.White,
+                    //                        fontSize = 14.sp,
+                    //                        fontWeight = FontWeight.SemiBold
+                    //                    )
+                    //                    Spacer(modifier = Modifier.height(8.dp))
+                    //                    OutlinedTextField(
+                    //                        value = confirmPassword,
+                    //                        onValueChange = { confirmPassword = it },
+                    //                        placeholder = { Text("Repita su contraseña", color = Color.Gray) },
+                    //                        leadingIcon = {
+                    //                            Icon(
+                    //                                imageVector = Icons.Default.Lock,
+                    //                                contentDescription = null,
+                    //                                tint = Color.Gray
+                    //                            )
+                    //                        },
+                    //                        visualTransformation = PasswordVisualTransformation(),
+                    //                        singleLine = true,
+                    //                        colors = OutlinedTextFieldDefaults.colors(
+                    //                            focusedTextColor = Color.White,
+                    //                            unfocusedTextColor = Color.White,
+                    //                            focusedBorderColor = PrismaRed,
+                    //                            unfocusedBorderColor = Color.Gray
+                    //                        ),
+                    //                        modifier = Modifier.fillMaxWidth(),
+                    //                        shape = RoundedCornerShape(12.dp)
+                    //                    )
                     errorMessage?.let {
                         Text(it, color = PrismaRed, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
                     }

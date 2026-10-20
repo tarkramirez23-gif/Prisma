@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.theylor.prisma.ui.theme.*
 
 @Composable
@@ -27,6 +28,7 @@ fun Register(onRegisterSuccess: () -> Unit = {}, onBackClick: () -> Unit = {}) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     val auth = remember { FirebaseAuth.getInstance() }
 
     Box(
@@ -39,7 +41,6 @@ fun Register(onRegisterSuccess: () -> Unit = {}, onBackClick: () -> Unit = {}) {
             )
             .padding(24.dp)
     ) {
-        // ... (resto del Box)
         IconButton(
             onClick = onBackClick,
             modifier = Modifier.align(Alignment.TopStart)
@@ -75,40 +76,64 @@ fun Register(onRegisterSuccess: () -> Unit = {}, onBackClick: () -> Unit = {}) {
                     modifier = Modifier.fillMaxWidth().padding(24.dp)
                 ) {
                     // Campo Nombre
-                    Text("Nombre Completo", color = Color.White, fontSize = 14.sp)
+                    Text("Nombre Completo", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
+                        placeholder = { Text("Ingrese su nombre", color = Color.Gray) },
                         leadingIcon = { Icon(Icons.Default.Person, null, tint = Color.Gray) },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = PrismaRed,
+                            unfocusedBorderColor = Color.Gray
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Campo Email
-                    Text("Email", color = Color.White, fontSize = 14.sp)
+                    Text("Email", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
+                        placeholder = { Text("Ingrese su correo electrónico", color = Color.Gray) },
                         leadingIcon = { Icon(Icons.Default.Email, null, tint = Color.Gray) },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = PrismaRed,
+                            unfocusedBorderColor = Color.Gray
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Campo Password
-                    Text("Contraseña", color = Color.White, fontSize = 14.sp)
+                    Text("Contraseña", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
+                        placeholder = { Text("Mínimo 6 caracteres", color = Color.Gray) },
                         leadingIcon = { Icon(Icons.Default.Lock, null, tint = Color.Gray) },
                         visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = PrismaRed,
+                            unfocusedBorderColor = Color.Gray
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     )
 
@@ -120,24 +145,57 @@ fun Register(onRegisterSuccess: () -> Unit = {}, onBackClick: () -> Unit = {}) {
 
                     Button(
                         onClick = {
-                            if (email.isNotEmpty() && password.isNotEmpty()) {
-                                auth.createUserWithEmailAndPassword(email, password)
+                            val cleanName = name.trim()
+                            val cleanEmail = email.trim()
+                            val cleanPassword = password.trim()
+
+                            if (cleanName.isEmpty() || cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
+                                errorMessage = "Por favor, completa todos los campos"
+                            } else if (cleanPassword.length < 6) {
+                                errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                            } else {
+                                isLoading = true
+                                errorMessage = null
+                                auth.createUserWithEmailAndPassword(cleanEmail, cleanPassword)
                                     .addOnCompleteListener { task ->
                                         if (task.isSuccessful) {
-                                            onRegisterSuccess()
+                                            val user = auth.currentUser
+                                            val profileUpdates = userProfileChangeRequest {
+                                                displayName = cleanName
+                                            }
+                                            user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                                                isLoading = false
+                                                onRegisterSuccess()
+                                            } ?: run {
+                                                isLoading = false
+                                                onRegisterSuccess()
+                                            }
                                         } else {
-                                            errorMessage = task.exception?.localizedMessage ?: "Error al registrar"
+                                            isLoading = false
+                                            val error = task.exception?.localizedMessage ?: ""
+                                            errorMessage = when {
+                                                error.contains("already in use", ignoreCase = true) || error.contains("email-already-in-use", ignoreCase = true) ->
+                                                    "El correo ya está registrado"
+                                                error.contains("badly formatted", ignoreCase = true) || error.contains("invalid-email", ignoreCase = true) ->
+                                                    "El correo electrónico no es válido"
+                                                error.contains("at least 6 characters", ignoreCase = true) || error.contains("weak-password", ignoreCase = true) ->
+                                                    "La contraseña debe tener al menos 6 caracteres"
+                                                else -> "Error al registrar la cuenta"
+                                            }
                                         }
                                     }
-                            } else {
-                                errorMessage = "Por favor, completa todos los campos"
                             }
                         },
+                        enabled = !isLoading,
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrismaRed),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("REGISTRARME", fontWeight = FontWeight.Bold)
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("REGISTRARME", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

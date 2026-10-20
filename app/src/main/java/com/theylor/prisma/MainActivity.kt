@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.google.firebase.FirebaseApp
+import com.theylor.prisma.data.repository.UserMovieRepository
+import com.theylor.prisma.ui.screens.Biblioteca
 import com.theylor.prisma.ui.screens.Home
 import com.theylor.prisma.ui.screens.Login
 import com.theylor.prisma.ui.screens.Peliculas
@@ -22,14 +24,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Inicialización manual de Firebase por si el plugin no carga
+        // Inicialización manual de Firebase
         FirebaseApp.initializeApp(this)
         
         enableEdgeToEdge()
         setContent {
             PRISMATheme {
                 var currentScreen by remember { mutableStateOf("home") }
-                var tipoPerfil by remember { mutableStateOf("Espectador") }
+                var tipoPerfil by remember { mutableStateOf("Cinefilo") }
+                val userMovieRepository = remember { UserMovieRepository() }
                 
                 when (currentScreen) {
                     "home" -> Home(onComenzarClick = { currentScreen = "login" })
@@ -52,11 +55,26 @@ class MainActivity : ComponentActivity() {
                     })
                     "resenas" -> Resenas(
                         onHomeTabClick = { currentScreen = "peliculas" },
-                        onProfileTabClick = { currentScreen = "profile_settings" }
+                        onProfileTabClick = { currentScreen = "profile_settings" },
+                        onCommunityTabClick = { currentScreen = "resenas" },
+                        onListsTabClick = { currentScreen = "biblioteca" }
                     )
+
                     "peliculas" -> Peliculas(
+                        userMovieRepository = userMovieRepository,
+                        currentTipoPerfil = tipoPerfil,
+                        onProfileTabClick = { currentScreen = "profile_settings" },
+                        onCommunityTabClick = { currentScreen = "resenas" },
+                        onListsTabClick = { currentScreen = "biblioteca" }
+                    )
+
+                    "biblioteca" -> Biblioteca(
+                        userMovieRepository = userMovieRepository,
+                        onHomeTabClick = { currentScreen = "peliculas" },
+                        onCommunityTabClick = { currentScreen = "resenas" },
                         onProfileTabClick = { currentScreen = "profile_settings" }
                     )
+
                     "profile_settings" -> ProfileSettings(
                         currentTipo = tipoPerfil,
                         onCambiarPerfilClick = {
